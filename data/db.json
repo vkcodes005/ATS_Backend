@@ -1,0 +1,134 @@
+{
+  "participants": [
+    {
+      "id": "p-001",
+      "code": "ATS-DAN-001",
+      "name": "Aarav Mehta",
+      "profession": "Dancer",
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?auto=format&fit=crop&w=700&q=85"
+    },
+    {
+      "id": "p-002",
+      "code": "ATS-SNG-002",
+      "name": "Naina Kapoor",
+      "profession": "Singer",
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=700&q=85"
+    },
+    {
+      "id": "p-003",
+      "code": "ATS-MOD-003",
+      "name": "Kabir Sethi",
+      "profession": "Model",
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=700&q=85"
+    },
+    {
+      "id": "p-004",
+      "code": "ATS-INF-004",
+      "name": "Meera Rao",
+      "profession": "Influencer",
+      "active": true,
+      "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=700&q=85"
+    }
+  ],
+  "sports": [
+    {
+      "id": "s-001",
+      "name": "Dance Battle",
+      "category": "Stage",
+      "active": true
+    },
+    {
+      "id": "s-002",
+      "name": "Singing League",
+      "category": "Music",
+      "active": true
+    },
+    {
+      "id": "s-003",
+      "name": "Ramp Walk",
+      "category": "Fashion",
+      "active": true
+    }
+  ],
+  "events": [
+    {
+      "id": "e-001",
+      "title": "ATS Audition Day",
+      "date": "2026-07-15",
+      "venue": "Main City Arena",
+      "details": "Open auditions for dancers, singers, models, influencers, and public performers.",
+      "active": true
+    },
+    {
+      "id": "e-002",
+      "title": "ATS Grand Showcase",
+      "date": "2026-08-20",
+      "venue": "Convention Stage",
+      "details": "Live showcase event with audience voting, media coverage, and sponsor activations.",
+      "active": true
+    }
+  ],
+  "eventBookings": [
+    {
+      "name": "vaishnavi kashyap",
+      "email": "vaishnavikashyap088@gmail.com",
+      "phone": "7261053273",
+      "city": "Kolkata ",
+      "notes": "",
+      "eventId": "e-001",
+      "eventTitle": "ATS Audition Day",
+      "eventDate": "2026-07-15",
+      "eventVenue": "Main City Arena",
+      "id": "booking-1780226596378-2cc246",
+      "status": "New",
+      "createdAt": "2026-05-31T11:23:16.378Z"
+    }
+  ],
+  "leads": [
+    {
+      "name": "Vaishnavi Kashyap",
+      "email": "vaishnavikashyap088@gmail.com",
+      "phone": "7261053273",
+      "city": "Muzufferpur",
+      "interest": "Media",
+      "id": "lead-1780226359558-b48e26",
+      "createdAt": "2026-05-31T11:19:19.558Z"
+    },
+    {
+      "name": "Vaishnavi Kashyap",
+      "email": "vaishnavikashyap088@gmail.com",
+      "phone": "7261053273",
+      "city": "Patna",
+      "interest": "Sponsor",
+      "id": "lead-1780225464489-08aa7a",
+      "createdAt": "2026-05-31T11:04:24.489Z"
+    },
+    {
+      "name": "vaishnavi kashyap",
+      "email": "vaishnavikashyap088@gmail.com",
+      "phone": "7261053273",
+      "city": "samastipur",
+      "interest": "Audience",
+      "id": "lead-1779967528718-b3a6fe",
+      "createdAt": "2026-05-28T11:25:28.718Z"
+    }
+  ],
+  "brochure": {
+    "fileName": "ats_2026.pdf",
+    "path": "uploads/ats_2026.pdf",
+    "updatedAt": "2026-05-31T11:03:31.822Z"
+  },
+  "brochures": [
+    {
+      "id": "brochure-1780226249595-a6edca",
+      "title": "ATS_2026",
+      "fileName": "ats_2026.pdf",
+      "path": "uploads/ats_2026.pdf",
+      "active": true,
+      "updatedAt": "2026-05-31T11:17:29.595Z"
+    }
+  ]
+}

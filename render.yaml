@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: ats-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: ATS_ADMIN_USER
+        value: admin
+      - key: ATS_ADMIN_PASS
+        sync: false
+      - key: ATS_ADMIN_TOKEN
+        sync: false
