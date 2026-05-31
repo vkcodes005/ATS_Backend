@@ -133,18 +133,6 @@ function publicDb(db) {
   };
 }
 
-function emptyDb() {
-  return {
-    participants: [],
-    sports: [],
-    events: [],
-    eventBookings: [],
-    leads: [],
-    brochure: {},
-    brochures: []
-  };
-}
-
 async function saveBrochureFile(payload) {
   if (!payload.dataUrl || !payload.fileName) throw new Error("PDF file is required");
   const base64 = payload.dataUrl.split(",").pop();
@@ -215,14 +203,6 @@ async function handleRequest(req, res) {
     }
 
     const db = await readDb();
-
-    if (url.pathname === "/api/reset-live-data" && req.method === "POST") {
-      const payload = await readBody(req);
-      if (payload.confirm !== "RESET_BACKEND_DATA") return sendError(res, 403, "Reset confirmation required");
-      const nextDb = emptyDb();
-      await writeDb(nextDb);
-      return sendJson(res, 200, { ok: true, db: nextDb });
-    }
 
     if (url.pathname === "/api/login" && req.method === "POST") {
       const credentials = await readBody(req);
