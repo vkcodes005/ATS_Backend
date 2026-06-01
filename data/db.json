@@ -4,6 +4,103 @@
   "events": [],
   "eventBookings": [],
   "leads": [],
-  "brochure": {},
-  "brochures": []
+  "brochure": {
+    "fileName": "ats_2026.pdf",
+    "path": "uploads/ats_2026.pdf",
+    "updatedAt": "2026-06-01T07:54:06.322Z"
+  },
+  "brochures": [
+    {
+      "id": "brochure-default",
+      "title": "ATS 2026 Main Brochure",
+      "fileName": "ats_2026.pdf",
+      "path": "uploads/ats_2026.pdf",
+      "active": true,
+      "updatedAt": "2026-06-01T07:54:06.322Z"
+    }
+  ],
+  "sponsors": [
+    {
+      "id": "sponsor-mediaone",
+      "name": "MediaOne",
+      "url": "",
+      "active": true
+    },
+    {
+      "id": "sponsor-stagepro",
+      "name": "StagePro",
+      "url": "",
+      "active": true
+    },
+    {
+      "id": "sponsor-creatorlab",
+      "name": "CreatorLab",
+      "url": "",
+      "active": true
+    }
+  ],
+  "testimonials": [
+    {
+      "id": "testimonial-riya",
+      "quote": "ATS gave our performers a serious stage and a real audience.",
+      "name": "Riya Sharma",
+      "role": "Creative Director",
+      "active": true
+    },
+    {
+      "id": "testimonial-arjun",
+      "quote": "The event flow, voting experience, and media coverage felt premium.",
+      "name": "Arjun Malhotra",
+      "role": "Sponsor Partner",
+      "active": true
+    },
+    {
+      "id": "testimonial-mehak",
+      "quote": "A strong platform for discovering fresh talent across cities.",
+      "name": "Mehak Sinha",
+      "role": "Talent Mentor",
+      "active": true
+    }
+  ],
+  "categories": [
+    {
+      "id": "category-dancer",
+      "name": "Dancer",
+      "active": true
+    },
+    {
+      "id": "category-singer",
+      "name": "Singer",
+      "active": true
+    },
+    {
+      "id": "category-model",
+      "name": "Model",
+      "active": true
+    },
+    {
+      "id": "category-influencer",
+      "name": "Influencer",
+      "active": true
+    },
+    {
+      "id": "category-performer",
+      "name": "Public Performer",
+      "active": true
+    }
+  ],
+  "homepage": {
+    "heroEyebrow": "Season 1 registrations open",
+    "heroTitle": "ATS 2026",
+    "heroSubtitle": "Artist Talent Show",
+    "heroDescription": "A premium national talent-show platform for performers, creators, models, singers, and dancers ready for a real stage, public voting, brand attention, and recognition.",
+    "contactEmail": "hello@ats2026.com",
+    "contactPhone": "+91 90000 00000",
+    "contactLocation": "India-wide talent events",
+    "socialInstagram": "https://instagram.com/",
+    "socialYoutube": "https://youtube.com/",
+    "socialFacebook": "https://facebook.com/",
+    "socialTelegram": "https://t.me/",
+    "socialLinkedin": "https://linkedin.com/"
+  }
 }

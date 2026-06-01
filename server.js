@@ -14,6 +14,57 @@ const ADMIN_USERNAME = process.env.ATS_ADMIN_USER || "admin";
 const ADMIN_PASSWORD = process.env.ATS_ADMIN_PASS || "ats2026";
 const ADMIN_TOKEN = process.env.ATS_ADMIN_TOKEN || "ats-admin-local-token";
 
+const defaultHomepage = {
+  heroEyebrow: "Season 1 registrations open",
+  heroTitle: "ATS 2026",
+  heroSubtitle: "Artist Talent Show",
+  heroDescription: "A premium national talent-show platform for performers, creators, models, singers, and dancers ready for a real stage, public voting, brand attention, and recognition.",
+  contactEmail: "hello@ats2026.com",
+  contactPhone: "+91 90000 00000",
+  contactLocation: "India-wide talent events",
+  socialInstagram: "https://instagram.com/",
+  socialYoutube: "https://youtube.com/",
+  socialFacebook: "https://facebook.com/",
+  socialTelegram: "https://t.me/",
+  socialLinkedin: "https://linkedin.com/"
+};
+
+const defaultCategories = [
+  { id: "category-dancer", name: "Dancer", active: true },
+  { id: "category-singer", name: "Singer", active: true },
+  { id: "category-model", name: "Model", active: true },
+  { id: "category-influencer", name: "Influencer", active: true },
+  { id: "category-performer", name: "Public Performer", active: true }
+];
+
+const defaultSponsors = [
+  { id: "sponsor-mediaone", name: "MediaOne", url: "", active: true },
+  { id: "sponsor-stagepro", name: "StagePro", url: "", active: true },
+  { id: "sponsor-creatorlab", name: "CreatorLab", url: "", active: true }
+];
+
+const defaultTestimonials = [
+  { id: "testimonial-riya", quote: "ATS gave our performers a serious stage and a real audience.", name: "Riya Sharma", role: "Creative Director", active: true },
+  { id: "testimonial-arjun", quote: "The event flow, voting experience, and media coverage felt premium.", name: "Arjun Malhotra", role: "Sponsor Partner", active: true },
+  { id: "testimonial-mehak", quote: "A strong platform for discovering fresh talent across cities.", name: "Mehak Sinha", role: "Talent Mentor", active: true }
+];
+
+function emptyDb() {
+  return {
+    participants: [],
+    sports: [],
+    events: [],
+    eventBookings: [],
+    leads: [],
+    brochure: {},
+    brochures: [],
+    sponsors: defaultSponsors,
+    testimonials: defaultTestimonials,
+    categories: defaultCategories,
+    homepage: defaultHomepage
+  };
+}
+
 const defaultPdf = `%PDF-1.4
 1 0 obj
 << /Type /Catalog /Pages 2 0 R >>
@@ -58,7 +109,7 @@ async function ensureFiles() {
   await mkdir(DATA_DIR, { recursive: true });
   await mkdir(UPLOAD_DIR, { recursive: true });
   if (!existsSync(DB_FILE)) {
-    await writeFile(DB_FILE, JSON.stringify({ participants: [], sports: [], events: [], eventBookings: [], leads: [], brochure: {}, brochures: [] }, null, 2));
+    await writeFile(DB_FILE, JSON.stringify(emptyDb(), null, 2));
   }
   const pdfPath = path.join(__dirname, "uploads", "ats-2026-brochure.pdf");
   if (!existsSync(pdfPath)) {
@@ -74,6 +125,10 @@ async function readDb() {
   db.events ||= [];
   db.eventBookings ||= [];
   db.leads ||= [];
+  db.sponsors ||= defaultSponsors;
+  db.testimonials ||= defaultTestimonials;
+  db.categories ||= defaultCategories;
+  db.homepage ||= defaultHomepage;
   db.brochure ||= {};
   db.brochures ||= db.brochure?.path
     ? [{
@@ -85,6 +140,23 @@ async function readDb() {
         updatedAt: db.brochure.updatedAt || new Date().toISOString()
       }]
     : [];
+  if (!db.brochure?.path && !db.brochures.length) {
+    const preferredPdf = existsSync(path.join(UPLOAD_DIR, "ats_2026.pdf")) ? "ats_2026.pdf" : "ats-2026-brochure.pdf";
+    db.brochure = {
+      fileName: preferredPdf,
+      path: `uploads/${preferredPdf}`,
+      updatedAt: new Date().toISOString()
+    };
+    db.brochures = [{
+      id: "brochure-default",
+      title: "ATS 2026 Main Brochure",
+      fileName: preferredPdf,
+      path: `uploads/${preferredPdf}`,
+      active: true,
+      updatedAt: db.brochure.updatedAt
+    }];
+    await writeDb(db);
+  }
   return db;
 }
 
@@ -120,7 +192,11 @@ async function readBody(req) {
   const chunks = [];
   for await (const chunk of req) chunks.push(chunk);
   if (!chunks.length) return {};
-  return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  } catch {
+    throw new Error("Invalid request data");
+  }
 }
 
 function publicDb(db) {
@@ -129,14 +205,21 @@ function publicDb(db) {
     sports: db.sports.filter((sport) => sport.active),
     events: db.events.filter((event) => event.active),
     brochure: db.brochure,
-    brochures: db.brochures.filter((brochure) => brochure.active)
+    brochures: db.brochures.filter((brochure) => brochure.active),
+    sponsors: db.sponsors.filter((sponsor) => sponsor.active),
+    testimonials: db.testimonials.filter((testimonial) => testimonial.active),
+    categories: db.categories.filter((category) => category.active),
+    homepage: db.homepage
   };
 }
 
 async function saveBrochureFile(payload) {
   if (!payload.dataUrl || !payload.fileName) throw new Error("PDF file is required");
+  if (!payload.dataUrl.startsWith("data:application/pdf")) throw new Error("Only PDF brochure files are allowed");
   const base64 = payload.dataUrl.split(",").pop();
+  if (!base64) throw new Error("PDF file data is missing");
   const safeName = payload.fileName.replace(/[^a-z0-9._-]/gi, "-").toLowerCase();
+  if (!safeName.endsWith(".pdf")) throw new Error("Brochure file must end with .pdf");
   const filePath = path.join(UPLOAD_DIR, safeName);
   await writeFile(filePath, Buffer.from(base64, "base64"));
   return {
@@ -237,7 +320,7 @@ async function handleRequest(req, res) {
       await writeDb(db);
       return sendJson(res, 201, {
         lead: nextLead,
-        brochureUrl: `/${db.brochure.path}`,
+        brochureUrl: db.brochure?.path ? `/${db.brochure.path}` : "",
         brochures: db.brochures
           .filter((brochure) => brochure.active)
           .map((brochure) => ({
@@ -373,6 +456,29 @@ async function handleRequest(req, res) {
     if (url.pathname.startsWith("/api/events")) {
       if (!requireAdmin(req, res)) return;
       return handleCollection(req, res, db, "events", "event", url.pathname);
+    }
+
+    if (url.pathname === "/api/homepage" && req.method === "PUT") {
+      if (!requireAdmin(req, res)) return;
+      const payload = await readBody(req);
+      db.homepage = { ...db.homepage, ...payload };
+      await writeDb(db);
+      return sendJson(res, 200, db.homepage);
+    }
+
+    if (url.pathname.startsWith("/api/sponsors")) {
+      if (!requireAdmin(req, res)) return;
+      return handleCollection(req, res, db, "sponsors", "sponsor", url.pathname);
+    }
+
+    if (url.pathname.startsWith("/api/testimonials")) {
+      if (!requireAdmin(req, res)) return;
+      return handleCollection(req, res, db, "testimonials", "testimonial", url.pathname);
+    }
+
+    if (url.pathname.startsWith("/api/categories")) {
+      if (!requireAdmin(req, res)) return;
+      return handleCollection(req, res, db, "categories", "category", url.pathname);
     }
 
     return sendError(res, 404, "Route not found");
