@@ -200,16 +200,42 @@ async function readBody(req) {
 }
 
 function publicDb(db) {
+  const brochures = activeBrochures(db);
   return {
     participants: db.participants.filter((participant) => participant.active),
     sports: db.sports.filter((sport) => sport.active),
     events: db.events.filter((event) => event.active),
     brochure: db.brochure,
-    brochures: db.brochures.filter((brochure) => brochure.active),
+    brochures: brochures.map(publicBrochure),
     sponsors: db.sponsors.filter((sponsor) => sponsor.active),
     testimonials: db.testimonials.filter((testimonial) => testimonial.active),
     categories: db.categories.filter((category) => category.active),
     homepage: db.homepage
+  };
+}
+
+function brochureFileExists(brochure) {
+  if (!brochure?.path) return false;
+  return existsSync(path.join(__dirname, brochure.path));
+}
+
+function activeBrochures(db) {
+  return db.brochures.filter((brochure) => brochure.active && brochureFileExists(brochure));
+}
+
+function publicBrochure(brochure) {
+  return {
+    id: brochure.id,
+    title: brochure.title,
+    fileName: brochure.fileName,
+    url: `/${brochure.path}`
+  };
+}
+
+function adminDb(db) {
+  return {
+    ...db,
+    brochures: db.brochures.map((brochure) => ({ ...brochure, fileAvailable: brochureFileExists(brochure) }))
   };
 }
 
@@ -301,12 +327,34 @@ async function handleRequest(req, res) {
 
     if (req.method === "GET" && url.pathname === "/api/admin") {
       if (!requireAdmin(req, res)) return;
-      return sendJson(res, 200, db);
+      return sendJson(res, 200, adminDb(db));
     }
 
     if (url.pathname === "/api/leads" && req.method === "GET") {
       if (!requireAdmin(req, res)) return;
       return sendJson(res, 200, db.leads);
+    }
+
+    if (url.pathname === "/api/leads/bulk-delete" && req.method === "POST") {
+      if (!requireAdmin(req, res)) return;
+      const payload = await readBody(req);
+      const ids = Array.isArray(payload.ids) ? payload.ids : [];
+      if (!ids.length) return sendError(res, 400, "Select at least one lead to delete");
+      const before = db.leads.length;
+      const idSet = new Set(ids);
+      db.leads = db.leads.filter((lead) => !idSet.has(lead.id));
+      await writeDb(db);
+      return sendJson(res, 200, { ok: true, deleted: before - db.leads.length });
+    }
+
+    if (url.pathname.startsWith("/api/leads/") && req.method === "DELETE") {
+      if (!requireAdmin(req, res)) return;
+      const id = url.pathname.split("/").pop();
+      const before = db.leads.length;
+      db.leads = db.leads.filter((lead) => lead.id !== id);
+      if (db.leads.length === before) return sendError(res, 404, "Lead not found");
+      await writeDb(db);
+      return sendJson(res, 200, { ok: true, deleted: 1 });
     }
 
     if (url.pathname === "/api/leads" && req.method === "POST") {
@@ -318,17 +366,10 @@ async function handleRequest(req, res) {
       };
       db.leads.unshift(nextLead);
       await writeDb(db);
+      const brochures = activeBrochures(db);
       return sendJson(res, 201, {
         lead: nextLead,
-        brochureUrl: db.brochure?.path ? `/${db.brochure.path}` : "",
-        brochures: db.brochures
-          .filter((brochure) => brochure.active)
-          .map((brochure) => ({
-            id: brochure.id,
-            title: brochure.title,
-            fileName: brochure.fileName,
-            url: `/${brochure.path}`
-          }))
+        brochures: brochures.map(publicBrochure)
       });
     }
 
@@ -382,7 +423,7 @@ async function handleRequest(req, res) {
 
     if (url.pathname === "/api/brochures" && req.method === "GET") {
       if (!requireAdmin(req, res)) return;
-      return sendJson(res, 200, db.brochures);
+      return sendJson(res, 200, db.brochures.map((brochure) => ({ ...brochure, fileAvailable: brochureFileExists(brochure) })));
     }
 
     if (url.pathname === "/api/brochures" && req.method === "POST") {
@@ -397,7 +438,7 @@ async function handleRequest(req, res) {
         updatedAt: new Date().toISOString()
       };
       db.brochures.unshift(brochure);
-      if (!db.brochure?.path) db.brochure = { fileName: brochure.fileName, path: brochure.path, updatedAt: brochure.updatedAt };
+      if (brochure.active || !db.brochure?.path) db.brochure = { fileName: brochure.fileName, path: brochure.path, updatedAt: brochure.updatedAt };
       await writeDb(db);
       return sendJson(res, 201, brochure);
     }
@@ -416,6 +457,13 @@ async function handleRequest(req, res) {
         ...savedFile,
         updatedAt: new Date().toISOString()
       };
+      if (db.brochures[index].active) {
+        db.brochure = {
+          fileName: db.brochures[index].fileName,
+          path: db.brochures[index].path,
+          updatedAt: db.brochures[index].updatedAt
+        };
+      }
       await writeDb(db);
       return sendJson(res, 200, db.brochures[index]);
     }
