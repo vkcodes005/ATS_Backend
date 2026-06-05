@@ -16,44 +16,56 @@ const ADMIN_TOKEN = process.env.ATS_ADMIN_TOKEN || "ats-admin-local-token";
 
 const defaultHomepage = {
   heroEyebrow: "Season 1 registrations open",
-  heroTitle: "ATS 2026",
+  heroTitle: "Artist Talent Show",
   heroSubtitle: "Artist Talent Show",
-  heroDescription: "A premium national talent-show platform for performers, creators, models, singers, and dancers ready for a real stage, public voting, brand attention, and recognition.",
-  contactEmail: "hello@ats2026.com",
-  contactPhone: "+91 90000 00000",
-  contactLocation: "India-wide talent events",
-  socialInstagram: "https://instagram.com/",
-  socialYoutube: "https://youtube.com/",
-  socialFacebook: "https://facebook.com/",
+  heroDescription: "Alpha Wings Tech Group presents a premium event platform for singers, dancers, models, actors, creators, writers, kids talent, and open talent performers ready for a professional stage.",
+  contactEmail: "Events@alphabusi.com",
+  contactPhone: "+91-79830 32984",
+  contactLocation: "3rd Floor, Orchid Centre, Rapid Metro Station, Sector 53, Gurugram, Haryana 122002",
+  socialInstagram: "https://www.instagram.com/atsshow.official/",
+  socialYoutube: "https://www.youtube.com/@ArtistTalentShow",
+  socialFacebook: "https://www.facebook.com/profile.php?id=61590326891434",
   socialTelegram: "https://t.me/",
   socialLinkedin: "https://linkedin.com/"
 };
 
 const defaultCategories = [
-  { id: "category-dancer", name: "Dancer", active: true },
   { id: "category-singer", name: "Singer", active: true },
+  { id: "category-dancer", name: "Dancer", active: true },
   { id: "category-model", name: "Model", active: true },
-  { id: "category-influencer", name: "Influencer", active: true },
-  { id: "category-performer", name: "Public Performer", active: true }
+  { id: "category-actor", name: "Actor", active: true },
+  { id: "category-creator", name: "Creator", active: true },
+  { id: "category-writer", name: "Writer", active: true },
+  { id: "category-mr-miss-cute", name: "Mr & Miss Cute", active: true },
+  { id: "category-open-talent", name: "Open Talent", active: true }
 ];
 
 const defaultSponsors = [
-  { id: "sponsor-mediaone", name: "MediaOne", url: "", active: true },
-  { id: "sponsor-stagepro", name: "StagePro", url: "", active: true },
-  { id: "sponsor-creatorlab", name: "CreatorLab", url: "", active: true }
+  { id: "sponsor-brochure", name: "Sponsors from ATS brochure", url: "", active: true },
+  { id: "partner-brochure", name: "Partners from ATS brochure", url: "", active: true },
+  { id: "media-partner-brochure", name: "Media Partners from ATS brochure", url: "", active: true },
+  { id: "supporting-org-brochure", name: "Supporting Organizations from ATS brochure", url: "", active: true }
 ];
 
 const defaultTestimonials = [
-  { id: "testimonial-riya", quote: "ATS gave our performers a serious stage and a real audience.", name: "Riya Sharma", role: "Creative Director", active: true },
-  { id: "testimonial-arjun", quote: "The event flow, voting experience, and media coverage felt premium.", name: "Arjun Malhotra", role: "Sponsor Partner", active: true },
-  { id: "testimonial-mehak", quote: "A strong platform for discovering fresh talent across cities.", name: "Mehak Sinha", role: "Talent Mentor", active: true }
+  { id: "testimonial-surya", quote: "Official testimonial pending approval.", name: "Surya Prakash", role: "Founder, Legit Global", active: true },
+  { id: "testimonial-ankit", quote: "Official testimonial pending approval.", name: "Ankit Nagar", role: "Co-Founder, Legit Global", active: true },
+  { id: "testimonial-vishal", quote: "Official testimonial pending approval.", name: "Vishal Gupta", role: "Founder, Viztechie Private Limited", active: true }
+];
+
+const defaultEvents = [
+  { id: "artist-talent-show-season-1", title: "Artist Talent Show Season 1", date: "Coming Soon", venue: "City to be announced", details: "A flagship ATS stage for singers, dancers, models, actors, creators, writers, kids talent, and open talent performers.", active: true },
+  { id: "meerut-runway-fashion-week-season-2", title: "Meerut Runway Fashion Week Season 2", date: "Coming Soon", venue: "Meerut", details: "Fashion, runway, and talent showcase managed by the ATS event team.", active: true },
+  { id: "grand-runway-night-season-1", title: "Grand Runway Night Season 1", date: "Coming Soon", venue: "City to be announced", details: "Premium runway night featuring models, designers, artists, and event partners.", active: true },
+  { id: "meerut-slow-championship-season-3", title: "Meerut Slow Championship Season 3", date: "Coming Soon", venue: "Meerut", details: "Community event experience managed under the ATS event portfolio.", active: true },
+  { id: "girfw-season-8", title: "GIRFW Season 8", date: "Coming Soon", venue: "City to be announced", details: "Established runway and fashion event managed with production, coordination, and partner support.", active: true }
 ];
 
 function emptyDb() {
   return {
     participants: [],
     sports: [],
-    events: [],
+    events: defaultEvents,
     eventBookings: [],
     leads: [],
     brochure: {},
@@ -202,7 +214,7 @@ async function readBody(req) {
 function publicDb(db) {
   const brochures = activeBrochures(db);
   return {
-    participants: db.participants.filter((participant) => participant.active),
+    participants: db.participants.filter((participant) => participant.active && (participant.status || "Approved") === "Approved"),
     sports: db.sports.filter((sport) => sport.active),
     events: db.events.filter((event) => event.active),
     brochure: db.brochure,
@@ -251,6 +263,52 @@ async function saveBrochureFile(payload) {
   return {
     fileName: safeName,
     path: `uploads/${safeName}`
+  };
+}
+
+async function saveUploadedFile(payload, { allowedPrefixes, allowedExtensions, folder = "uploads", label = "file" }) {
+  if (!payload?.dataUrl || !payload?.fileName) return null;
+  if (!allowedPrefixes.some((prefix) => payload.dataUrl.startsWith(prefix))) {
+    throw new Error(`Unsupported ${label} type`);
+  }
+  const base64 = payload.dataUrl.split(",").pop();
+  if (!base64) throw new Error(`${label} data is missing`);
+  const safeName = payload.fileName.replace(/[^a-z0-9._-]/gi, "-").toLowerCase();
+  if (!allowedExtensions.some((extension) => safeName.endsWith(extension))) {
+    throw new Error(`Unsupported ${label} extension`);
+  }
+  const uniqueName = `${Date.now()}-${Math.random().toString(16).slice(2, 8)}-${safeName}`;
+  const filePath = path.join(__dirname, folder, uniqueName);
+  await writeFile(filePath, Buffer.from(base64, "base64"));
+  return {
+    fileName: safeName,
+    path: `${folder}/${uniqueName}`,
+    url: `/${folder}/${uniqueName}`
+  };
+}
+
+async function normalizeParticipant(payload, { isAdmin = false } = {}) {
+  const photo = await saveUploadedFile(payload.photoFile, {
+    allowedPrefixes: ["data:image/"],
+    allowedExtensions: [".jpg", ".jpeg", ".png", ".webp"],
+    label: "portfolio photo"
+  });
+  const video = await saveUploadedFile(payload.videoFile, {
+    allowedPrefixes: ["data:video/"],
+    allowedExtensions: [".mp4", ".mov", ".webm"],
+    label: "talent video"
+  });
+  const { photoFile, videoFile, ...participant } = payload;
+  return {
+    ...participant,
+    image: photo?.url || participant.image || "",
+    portfolioPhoto: photo?.url || participant.portfolioPhoto || "",
+    portfolioPhotoFileName: photo?.fileName || participant.portfolioPhotoFileName || "",
+    talentVideo: video?.url || participant.talentVideo || "",
+    talentVideoFileName: video?.fileName || participant.talentVideoFileName || "",
+    status: participant.status || (isAdmin ? "Approved" : "Pending"),
+    active: isAdmin ? participant.active !== false : false,
+    submittedAt: participant.submittedAt || new Date().toISOString()
   };
 }
 
@@ -303,9 +361,20 @@ async function handleRequest(req, res) {
         return res.end("File not found");
       }
       const file = await readFile(filePath);
+      const extension = path.extname(safeName).toLowerCase();
+      const contentTypes = {
+        ".pdf": "application/pdf",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+        ".webp": "image/webp",
+        ".mp4": "video/mp4",
+        ".mov": "video/quicktime",
+        ".webm": "video/webm"
+      };
       res.writeHead(200, {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${safeName}"`,
+        "Content-Type": contentTypes[extension] || "application/octet-stream",
+        "Content-Disposition": `${extension === ".pdf" ? "attachment" : "inline"}; filename="${safeName}"`,
         "Access-Control-Allow-Origin": "*"
       });
       return res.end(file);
@@ -481,8 +550,29 @@ async function handleRequest(req, res) {
       return sendJson(res, 200, db.participants);
     }
 
+    if (url.pathname === "/api/participants" && req.method === "POST") {
+      const payload = await readBody(req);
+      const participant = await normalizeParticipant(payload, { isAdmin: isAdmin(req) });
+      const nextParticipant = { ...participant, id: makeId("participant") };
+      db.participants.unshift(nextParticipant);
+      await writeDb(db);
+      return sendJson(res, 201, nextParticipant);
+    }
+
+    if (url.pathname.startsWith("/api/participants/") && req.method === "PUT") {
+      if (!requireAdmin(req, res)) return;
+      const id = url.pathname.split("/").pop();
+      const payload = await readBody(req);
+      const index = db.participants.findIndex((entry) => entry.id === id);
+      if (index === -1) return sendError(res, 404, "Participant not found");
+      const participant = await normalizeParticipant({ ...db.participants[index], ...payload }, { isAdmin: true });
+      db.participants[index] = { ...participant, id };
+      await writeDb(db);
+      return sendJson(res, 200, db.participants[index]);
+    }
+
     if (url.pathname.startsWith("/api/participants")) {
-      if (req.method !== "POST" && !requireAdmin(req, res)) return;
+      if (!requireAdmin(req, res)) return;
       return handleCollection(req, res, db, "participants", "participant", url.pathname);
     }
 
